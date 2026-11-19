@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>开心十三张 · 单人对战</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="intro" id="intro" hidden>
+  <span class="intro-title">开心十三张</span>
+</div>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">♠</span>
+      <div>
+        <h1>开心十三张</h1>
+        <p class="sub">去掉大小王 · 每人 13 张 · 你 VS 三家电脑</p>
+      </div>
+    </div>
+    <div class="hud">
+      <span>第 <b id="roundNo">1</b> 局</span>
+      <label>下注
+        <select id="bet" title="只在开局时可以调整倍数">
+          <option value="1">1 倍</option>
+          <option value="2">2 倍</option>
+          <option value="3">3 倍</option>
+          <option value="5">5 倍</option>
+        </select>
+      </label>
+      <span class="turn-tip" id="turnTip">等待发牌…</span>
+    </div>
+    <div class="top-actions">
+      <button id="rulesBtn" class="ghost">玩法说明</button>
+      <button id="nextBtn">再来一局</button>
+      <button id="resetBtn" class="ghost">清零积分</button>
+    </div>
+  </header>
+
+  <main class="board">
+    <section class="felt">
+      <div class="seat seat-2" data-seat="2"></div>
+      <div class="seat seat-3" data-seat="3"></div>
+      <div class="seat seat-1" data-seat="1"></div>
+      <div class="center">
+        <div class="to-beat" id="toBeat"><span class="idle">等待先出</span></div>
+      </div>
+      <div class="seat seat-0" data-seat="0"></div>
+    </section>
+
+    <section class="handbar">
+      <div class="hand" id="hand"></div>
+      <div class="controls">
+        <div class="status" id="status"></div>
+        <div class="buttons">
+          <button id="hintBtn" class="ghost">提示</button>
+          <button id="passBtn" disabled>不出</button>
+          <button id="playBtn" disabled>出牌</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <div class="panel">
+        <h2>积分</h2>
+        <div class="scores" id="scores"></div>
+      </div>
+      <div class="panel grow">
+        <h2>出牌记录</h2>
+        <div class="log" id="log"></div>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<div class="modal" id="rulesModal" hidden>
+  <div class="sheet">
+    <h2>开心十三张 玩法</h2>
+    <ol class="rules">
+      <li>去掉大小王，四家各发 13 张牌。</li>
+      <li>单张比大小：<b>黑桃 A 最大</b>，<b>方块 2 最小</b>；同点数按 ♠ &gt; ♥ &gt; ♣ &gt; ♦ 比较。</li>
+      <li>一次可以出 <b>1 张</b>、<b>2 张</b>或 <b>5 张</b>。两张必须是同点数的对子；五张牌型大小依次为：<br>
+        <b>四带一 &gt; 三带二 &gt; 五张同花顺 &gt; 五张同花 &gt; 五张顺子</b>。</li>
+      <li>持 <b>方块 2</b> 者先出，之后按逆时针依次出牌；要压过上一家，必须出<b>相同张数</b>且更大的牌，否则选择「不出」。</li>
+      <li>三家都不要，最后一手出牌的一方继续先出，直到所有人出完。</li>
+      <li>结算（每人下注 1 倍为例）：第一个出完的是赢家；第二名、第三名各输自己下注的 2/4（0.5 倍）；最后一名输掉其他三家的下注之和（3 倍），全部归赢家。</li>
+      <li>积分：每家开局带 <b>1000 分</b>，<b>1 分 = 1 倍下注</b>，所以 1 倍时赢家 +4、第二三名各 -0.5、最后一名 -3；结算表最后一列就是各家手上的总分，四家之和永远是 4000。</li>
+    </ol>
+    <table class="ladder">
+      <tr><th>牌型</th><th>说明</th><th>举例</th></tr>
+      <tr><td>四带一</td><td>四张同点 + 任意一张</td><td>9999 + K</td></tr>
+      <tr><td>三带二</td><td>三张同点 + 一对</td><td>777 + 22</td></tr>
+      <tr><td>五张同花顺</td><td>同花色且连续五张</td><td>♥5-♥6-♥7-♥8-♥9</td></tr>
+      <tr><td>五张同花</td><td>同花色任意五张</td><td>♣2-3-5-7-9</td></tr>
+      <tr><td>五张顺子</td><td>花色不限的连续五张</td><td>3-4-5-6-7</td></tr>
+      <tr><td>对子</td><td>两张同点数，按点数比，同点再比其中较大的花色</td><td>♠A♥A &gt; ♠K♥K</td></tr>
+      <tr><td>单张</td><td>一张，单独比大小</td><td>♠A 最大</td></tr>
+    </table>
+    <p class="note">不同张数的牌型之间不能互压：单张只压单张，对子只压对子，五张牌型只压五张牌型。A 既可作最大单张，也可作顺子 <span class="mono">A-2-3-4-5</span> 的最小张（最小组合）；<span class="mono">10-J-Q-K-A</span> 是最大顺子。</p>
+    <button id="closeRules">开始游戏</button>
+  </div>
+</div>
+
+<div class="modal" id="resultModal" hidden>
+  <div class="sheet">
+    <h2 id="resultTitle">本局结束</h2>
+    <div id="resultBody"></div>
+    <button id="againBtn">再来一局</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>
